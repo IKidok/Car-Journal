@@ -1,26 +1,37 @@
-import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
+import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
 import { CarsService } from './cars.service';
-import { CreateCarInput } from './dto/input/create-car.input';
-import { CarEntity } from './car.entity';
+import { CarInput } from './dto/input/car.input';
+import { Car } from './car.entity';
 
-@Resolver(() => 'Car')
+@Resolver(() => Car)
 export class CarsResolver {
   constructor(private readonly carsService: CarsService) {}
 
-  @Mutation(() => CarEntity)
-  async createCar(
-    @Args('createCar') createCarInput: CreateCarInput,
-  ): Promise<CarEntity> {
-    return await this.carsService.createCar(createCarInput);
+  @Mutation(() => Car, { nullable: true })
+  async createCar(@Args('carInput') carInput: CarInput): Promise<Car> {
+    return await this.carsService.createCar(carInput);
   }
 
-  @Query(() => CarEntity, { name: 'car', nullable: true })
-  async getCar(@Args('id') id: number): Promise<CarEntity> {
+  @Query(() => Car, { name: 'car' })
+  async getCar(@Args('id', { type: () => Int }) id: number): Promise<Car> {
     return await this.carsService.getCar(id);
   }
 
-  @Query(() => [CarEntity], { name: 'cars', nullable: 'items' })
-  async getCars(): Promise<CarEntity[]> {
+  @Query(() => [Car], { name: 'cars', nullable: 'items' })
+  async getCars(): Promise<Car[]> {
     return await this.carsService.getCars();
+  }
+
+  @Mutation(() => Car)
+  async updateCar(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('carInput') carInput: CarInput,
+  ): Promise<Car> {
+    return await this.carsService.updateCar(id, carInput);
+  }
+
+  @Mutation(() => Car)
+  async deleteCar(@Args('id', { type: () => Int }) id: number): Promise<Car> {
+    return await this.carsService.deleteCar(id);
   }
 }

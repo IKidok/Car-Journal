@@ -4,14 +4,25 @@ import { CarsModule } from './cars/cars.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DriversModule } from './drivers/drivers.module';
+import { createCarsLoader } from './cars/cars.dataloader';
+import { CarsService } from './cars/cars.service';
 
 @Module({
   imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      autoSchemaFile: true,
-      sortSchema: true,
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
+      imports: [CarsModule],
       driver: ApolloDriver,
-      playground: true,
+      useFactory: (carsService: CarsService) => ({
+        autoSchemaFile: true,
+        sortSchema: true,
+        playground: true,
+        context: () => ({
+          carsLoader: createCarsLoader(carsService),
+        }),
+      }),
+
+      inject: [CarsService],
     }),
     ConfigModule.forRoot({
       envFilePath: '.env',
@@ -22,7 +33,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         type: 'mysql',
-        host: 'localhost',
+        host: config.get<string>('HOST'),
         port: 3306,
         username: config.get<string>('MYSQL_USER'),
         password: config.get<string>('MYSQL_PASSWORD'),
@@ -34,6 +45,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
     }),
     CarsModule,
+    DriversModule,
   ],
   controllers: [],
   providers: [],

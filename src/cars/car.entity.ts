@@ -2,17 +2,19 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Driver } from '../drivers/driver.entity';
 
-@ObjectType()
+@ObjectType('cars')
 @Entity('cars')
-export class CarEntity {
+export class Car {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Field()
   @Column()
@@ -22,11 +24,15 @@ export class CarEntity {
   @Column()
   issueYear: number;
 
+  @Field(() => [Driver], { nullable: true, name: 'drivers' })
+  @OneToMany(() => Driver, (driver: Driver) => driver.car, { nullable: true })
+  drivers?: Promise<Driver[] | null>;
+
   @Field()
   @CreateDateColumn()
   createdAt: Date;
 
   @Field()
   @UpdateDateColumn()
-  updateDate: Date;
+  updatedAt: Date;
 }
